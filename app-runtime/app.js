@@ -6,7 +6,7 @@ import {ListeningVisualizer} from './listening-visualizer.js?v=31';
 import {preloadResonant} from './resonant-voice.js?v=30';
 preloadResonant().catch(()=>{});
 import {buildResonantInstrument} from './resonant-instruments.js?v=30';
-import {SongGallery} from './gallery.js?v=31';
+import {SongGallery} from './gallery.js?v=37';
 import * as THREE from './vendor/three.module.js';
 import {findMalletStrike,MALLET_RADIUS,malletStillTouches,deliberateMalletStrike,MALLET_SENSITIVITY,malletVelocity,malletImpactVelocity,malletFeedback} from './mallets.js?v=35';
 import {addAtmosphere} from './atmosphere.js?v=34';

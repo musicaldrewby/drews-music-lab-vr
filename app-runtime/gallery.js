@@ -10,7 +10,7 @@ export class SongGallery {
   const recent=read('music-gallery-history',[]);this.history=Array.isArray(recent)?recent.filter(item=>validId(item?.id)&&Number.isFinite(item.playedAt)).slice(0,60):[];
   try{this.device=localStorage.getItem('music-gallery-device')||crypto.randomUUID();localStorage.setItem('music-gallery-device',this.device);}catch{this.device=crypto.randomUUID();}
  }
- async fetch(path='',options={}){const response=await fetch('https://drews-music-lab-vr.musicaldrewby.chatgpt.site/api/gallery'+path,{...options,headers:{'Content-Type':'application/json','X-Gallery-Device':this.device,...options.headers}});let data;try{data=await response.json();}catch{throw Error('The listening room is unavailable. Try again shortly.');}if(!response.ok)throw Error(data.error||'Please try again.');return data;}
+ async fetch(path='',options={}){const base=location.hostname==='musicaldrewby.github.io'?'https://drews-music-lab-vr.musicaldrewby.chatgpt.site/api/gallery':'/api/gallery';const response=await fetch(base+path,{...options,headers:{'Content-Type':'application/json','X-Gallery-Device':this.device,...options.headers}});let data;try{data=await response.json();}catch{throw Error('The listening room is unavailable. Try again shortly.');}if(!response.ok)throw Error(data.error||'Please try again.');return data;}
  changed(){this.api.changed?.();}
  get page(){return Math.floor(this.offset/GALLERY_PAGE_SIZE)+1;}
  get pages(){return Math.max(1,Math.ceil(this.total/GALLERY_PAGE_SIZE));}

@@ -9,10 +9,30 @@ const args = process.argv.slice(2);
 const flag = name => { const i = args.indexOf(name); return i < 0 ? undefined : args[i + 1]; };
 const port = Number(flag('--port') || process.env.PORT || 3000);
 const mime = {'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.wasm':'application/wasm','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp','.gif':'image/gif','.ico':'image/x-icon','.wav':'audio/wav','.mp3':'audio/mpeg','.ogg':'audio/ogg','.m4a':'audio/mp4','.mp4':'video/mp4','.webm':'video/webm','.woff':'font/woff','.woff2':'font/woff2','.ttf':'font/ttf','.otf':'font/otf','.txt':'text/plain; charset=utf-8','.pdf':'application/pdf'};
+const GALLERY_UPSTREAM = 'https://drews-music-lab-vr.musicaldrewby.chatgpt.site';
 const server = http.createServer(async (req, res) => {
-  if (!['GET','HEAD'].includes(req.method)) { res.writeHead(405, {Allow:'GET, HEAD'}); return res.end(); }
   try {
     const url = new URL(req.url, 'http://localhost');
+    if (url.pathname === '/api/gallery' || url.pathname.startsWith('/api/gallery/')) {
+      const upstreamUrl = GALLERY_UPSTREAM + url.pathname + url.search;
+      const chunks = [];
+      for await (const chunk of req) chunks.push(chunk);
+      const body = chunks.length ? Buffer.concat(chunks) : undefined;
+      const headers = {
+        'Origin': 'https://musicaldrewby.github.io',
+        'Content-Type': req.headers['content-type'] || 'application/json'
+      };
+      if (req.headers['x-gallery-device']) headers['X-Gallery-Device'] = req.headers['x-gallery-device'];
+      const upstream = await fetch(upstreamUrl, { method: req.method, headers, body });
+      const resBody = Buffer.from(await upstream.arrayBuffer());
+      res.writeHead(upstream.status, {
+        'Content-Type': upstream.headers.get('content-type') || 'application/json',
+        'Cache-Control': 'no-store',
+        'X-Content-Type-Options': 'nosniff'
+      });
+      return res.end(resBody);
+    }
+    if (!['GET','HEAD'].includes(req.method)) { res.writeHead(405, {Allow:'GET, HEAD'}); return res.end(); }
     const pathname = decodeURIComponent(url.pathname);
     let target = path.resolve(root, '.' + pathname);
     if (target !== root && !target.startsWith(root + path.sep)) { res.writeHead(403); return res.end(); }
