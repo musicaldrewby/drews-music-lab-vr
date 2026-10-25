@@ -25,7 +25,7 @@ let preferenceStorage;try{preferenceStorage=localStorage;}catch{}
 const instrumentPlacement=new InstrumentPlacement(preferenceStorage),frameMonitor=new FrameMonitor();
 document.addEventListener('visibilitychange',()=>frameMonitor.reset());
 let playUI=null,midiInput=null,midiSoundReady=false;
-import {setupPlayView} from './play-view.js?v=36';
+import {setupPlayView} from './play-view.js?v=37';
 import {preloadSteelpan} from './steelpan-voice.js?v=22';
 preloadSteelpan().catch(()=>{});
 const weatherStart=performance.now();

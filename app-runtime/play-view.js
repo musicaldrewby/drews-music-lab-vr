@@ -29,8 +29,53 @@ export function setupPlayView(api){
   api.renderer.shadowMap.needsUpdate=true;
  }
  function setMode(next,reset=true){mode=next;api.release();$('panel').close();document.body.classList.toggle('play-mode',mode==='play');$('view-play').setAttribute('aria-pressed',String(mode==='play'));$('view-explore').setAttribute('aria-pressed',String(mode==='explore'));focus();render();if(reset){if(mode==='play')api.fit();else api.overview();}}
- function chooser(){const p=api.panel('Choose an instrument');const grid=document.createElement('div');grid.className='instrument-grid';for(const s of api.specs.filter(s=>!['notewall','gallery'].includes(s.type))){const b=button('',()=>{$('panel').close();api.select(s.id);});b.className='instrument-choice';b.dataset.family=s.type;b.setAttribute('aria-pressed',String(s.id===api.current().id));const name=document.createElement('strong'),family=document.createElement('small');name.textContent=s.name;family.textContent=s.family;b.append(name,family);grid.append(b);}p.append(grid);}
- function settings(){const p=api.panel('Settings & help');const list=document.createElement('div');list.className='settings-list';const volume=document.createElement('label');volume.className='volume';volume.textContent='Volume';const input=document.createElement('input');input.type='range';input.min=0;input.max=1;input.step=.01;input.value=$('volume').value;input.oninput=()=>{$('volume').value=input.value;$('volume').oninput({target:input});};volume.append(input);list.append(volume,button('Seated play & height',api.comfort),button('Adjust instrument reach',api.placement),button('Performance check',api.performance),button('MIDI keyboard',api.midi),button('Teacher media',api.media),button('Teacher media setup',api.teacher),button('How to play',api.help));const credit=document.createElement('p');credit.className='music-summary';credit.innerHTML='Steelpan: acoustic recordings by Jeff Learman, public domain. Gong: psuess; wind chimes: perrydolia, CC0. <a href="./samples/steelpan/CREDITS.txt" target="_blank" rel="noopener">Steelpan credits</a> · <a href="./samples/steelpan/LICENSE.txt" target="_blank" rel="noopener">License</a> · <a href="./samples/resonant/CREDITS.txt" target="_blank" rel="noopener">Gong & chime credits</a>';list.append(credit);p.append(list);}
+ function chooser(){
+  const p=api.panel('Choose an instrument');
+  const container=document.createElement('div');container.className='instrument-catalog';
+  const groups=new Map();
+  for(const s of api.specs.filter(s=>!['notewall','gallery'].includes(s.type))){
+   if(!groups.has(s.family))groups.set(s.family,[]);
+   groups.get(s.family).push(s);
+  }
+  for(const [familyName,items]of groups){
+   const section=document.createElement('section');section.className='instrument-section';
+   const heading=document.createElement('h3');heading.className='instrument-group-title';heading.textContent=familyName;
+   const grid=document.createElement('div');grid.className='instrument-grid';
+   for(const s of items){
+    const b=button('',()=>{$('panel').close();api.select(s.id);});
+    b.className='instrument-choice';b.dataset.family=s.type;b.setAttribute('aria-pressed',String(s.id===api.current().id));
+    const icon=document.createElement('span');icon.className='instrument-icon';icon.setAttribute('aria-hidden','true');icon.textContent=s.icon||'♪';
+    const text=document.createElement('div');text.className='instrument-meta';
+    const name=document.createElement('strong'),family=document.createElement('small');
+    name.textContent=s.name;family.textContent=s.family;
+    text.append(name,family);b.append(icon,text);grid.append(b);
+   }
+   section.append(heading,grid);container.append(section);
+  }
+  p.append(container);
+ }
+ function settings(){
+  const p=api.panel('Settings & help');
+  const list=document.createElement('div');list.className='settings-list';
+  const volume=document.createElement('label');volume.className='volume';
+  const volLabel=document.createElement('span');volLabel.textContent='Master volume';
+  const input=document.createElement('input');input.type='range';input.min=0;input.max=1;input.step=.01;input.value=$('volume').value;
+  input.oninput=()=>{$('volume').value=input.value;$('volume').oninput({target:input});};
+  volume.append(volLabel,input);
+  const grid=document.createElement('div');grid.className='settings-grid';
+  grid.append(
+   button('Seated play & height',api.comfort),
+   button('Adjust instrument reach',api.placement),
+   button('MIDI keyboard',api.midi),
+   button('Performance check',api.performance),
+   button('Teacher media',api.media),
+   button('Teacher media setup',api.teacher),
+   button('How to play & room guide',api.help)
+  );
+  const credit=document.createElement('p');credit.className='music-summary settings-credits';
+  credit.innerHTML='Steelpan: acoustic recordings by Jeff Learman, public domain. Gong: psuess; wind chimes: perrydolia, CC0. <a href="./samples/steelpan/CREDITS.txt" target="_blank" rel="noopener">Steelpan credits</a> · <a href="./samples/steelpan/LICENSE.txt" target="_blank" rel="noopener">License</a> · <a href="./samples/resonant/CREDITS.txt" target="_blank" rel="noopener">Gong & chime credits</a>';
+  list.append(volume,grid,credit);p.append(list);
+ }
  function musicSettings(){const p=api.panel('Music settings');p.innerHTML='<div id="music-harmony"></div><label class="field">Speed (beats per minute)<input id="music-tempo" type="number" min="40" max="200"></label><p class="music-summary" id="tempo-hint"></p><label class="field"><span><input id="music-click" type="checkbox"> Metronome while recording and overdubbing</span></label><label class="field">Stick-click volume <output id="music-click-level"></output><input id="music-click-volume" type="range" min="0" max="100" step="1" style="width:100%"></label><button id="music-click-test" class="secondary">Test click</button><details><summary>More music options</summary><label class="field">VR mallet sensitivity<select id="music-mallet"><option value="light">Light</option><option value="normal">Normal</option><option value="firm">Firm</option></select></label><p class="music-summary">Gentle taps sound softer; faster strikes sound stronger and brighter. Light accepts gentler strokes. Firm helps prevent accidental notes. Your dynamics are kept when recording.</p><label class="field"><span><input id="music-snap" type="checkbox"> Snap recorded notes to the beat (16ths)</span></label><label class="field"><span><input id="music-five" type="checkbox"> Use a 5-note subset on pitched instruments</span></label><label class="field"><span><input id="music-lights" type="checkbox"> Light show with the beat</span></label></details>';
   api.harmonySelect('music-harmony','music');$('music-tempo').value=api.recorder.bpm;$('music-tempo').onchange=e=>{api.tempo(+e.target.value);refresh();};$('music-click').checked=api.recorder.metronome;$('music-click').onchange=e=>api.metronome(e.target.checked);$('music-click-volume').oninput=e=>api.setMetronomeVolume(+e.target.value/100);$('music-click-test').onclick=api.previewMetronome;$('music-mallet').value=api.malletSensitivity();$('music-mallet').onchange=e=>api.setMalletSensitivity(e.target.value);$('music-snap').checked=api.recorder.quantize;$('music-snap').onchange=e=>api.recorder.quantize=e.target.checked;$('music-five').checked=$('pentatonic').checked;$('music-five').onchange=e=>{$('pentatonic').checked=e.target.checked;$('pentatonic').onchange(e);};$('music-lights').checked=api.lights();$('music-lights').onchange=api.toggleLights;refresh();
  }

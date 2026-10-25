@@ -1,0 +1,8 @@
+{
+  "name": "Mr. Drew’s Music Lab · VR",
+  "description": "Step into a playable music room. Explore steelpan, Orff instruments, percussion and a drum machine in your browser or VR headset.",
+  "requestFramePermissions": [
+    "microphone",
+    "xr-spatial-tracking"
+  ]
+}
