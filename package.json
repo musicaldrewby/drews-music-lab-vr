@@ -1,0 +1,18 @@
+{
+  "name": "music-lab-vr",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node --check aistudio-server.mjs",
+    "db:generate": "drizzle-kit generate",
+    "test": "node tests/song-station.mjs && node tests/gallery.mjs && node tests/resonant.mjs && node tests/room-tools.mjs && node tests/midi-input.mjs && node tests/mallet-expression.mjs && node tests/creative-tools.mjs",
+    "build:original": "node scripts/build.mjs",
+    "dev": "node aistudio-server.mjs",
+    "start": "node aistudio-server.mjs"
+  },
+  "devDependencies": {
+    "drizzle-kit": "0.31.4",
+    "drizzle-orm": "0.44.5",
+    "esbuild": "0.25.10"
+  }
+}

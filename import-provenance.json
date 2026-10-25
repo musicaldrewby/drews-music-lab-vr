@@ -1,0 +1,13 @@
+{
+  "title": "Mr. Drew\u2019s Music Lab \u00b7 VR",
+  "slug": "drews-music-lab-vr",
+  "target_repository": "musicaldrewby/drews-music-lab-vr",
+  "source_repository": "musicaldrewby/music_teacher",
+  "source_branch": "main",
+  "source_commit": "9a7f0cd9aa4c8683f611a6b9c73f841ce15a1f02",
+  "original_source_commit": "a9ccd55ba5461070e613666cb5f9950ba99c941b",
+  "kind": "static-with-external-backend",
+  "backend": "https://drews-music-lab-vr.musicaldrewby.chatgpt.site/api/gallery",
+  "listed_in_arcade": true,
+  "status": "inventory_verified"
+}
