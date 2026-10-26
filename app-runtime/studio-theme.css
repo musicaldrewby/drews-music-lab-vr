@@ -17,17 +17,23 @@
   font-variant-numeric: tabular-nums;
 }
 
-body[data-instrument-family="xylophone"] {
+body[data-instrument-family="xylophone"],
+body[data-instrument-family="kalimba"],
+body[data-instrument-family="bongos"] {
   --family-accent: #b77957;
 }
 body[data-instrument-family="metallophone"],
-body[data-instrument-family="windchimes"] {
+body[data-instrument-family="windchimes"],
+body[data-instrument-family="handpan"] {
   --family-accent: #6da696;
 }
 body[data-instrument-family="synth"],
 body[data-instrument-family="drums"],
 body[data-instrument-family="bass"] {
   --family-accent: #9b84ab;
+}
+#note-roll-view {
+  cursor: pointer;
 }
 
 /* 1. UNIFIED TOP NAVIGATION BAR */

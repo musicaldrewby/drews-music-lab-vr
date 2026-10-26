@@ -1,11 +1,11 @@
-import {MusicAudio} from './audio.js?v=36';
+import {MusicAudio} from './audio.js?v=39';
 import {WallSynth} from './synth.js?v=36';
 import {BassVoice,bassEvent} from './bass.js?v=21';
 import {SteelpanVoice} from './steelpan-voice.js?v=22';
 import {ResonantVoice} from './resonant-voice.js?v=30';
-import {validateSong} from './recorder.js?v=36';
-import {instrument} from './piano-roll.js?v=30';
-import {mixLevel} from './creative-tools.js?v=36';
+import {validateSong} from './recorder.js?v=39';
+import {instrument} from './piano-roll.js?v=39';
+import {mixLevel} from './creative-tools.js?v=39';
 export function songTimeline(input){const song=validateSong(input),beatSeconds=60/song.bpm,events=song.events.map(e=>({event:e,at:e.beat*beatSeconds}));
  for(let step=0;step<song.bars*16;step++){
   if(song.drumPattern)for(let row=0;row<4;row++)if(song.drumPattern[row][step%16])events.push({at:step*beatSeconds/4,event:{type:['kick','snare','hat','clap'][row],instrumentId:'drums',midi:60,velocity:.75,duration:.25}});
@@ -25,10 +25,11 @@ export async function renderSongWav(input,liveAudio,progress=()=>{}){
   if(e.type==='synth'){const p=e.patch,echo=p.delayMix>0?Math.min(14,p.delayTime*Math.log(.001)/Math.log(Math.max(.01,p.feedback))):0;tail=e.duration*beatSeconds+p.release+Math.max(p.reverbMix>0?1.8:0,echo);}
   else if(e.type==='gong'||e.type==='windchimes'){const buffer=liveAudio.resonant?.buffers.get(e.type==='gong'?'gong':'chime'),rate=e.type==='gong'?1:(440*2**((e.midi-69)/12))/587.3;tail=(buffer?.duration||8)/rate+1.8;}
   else if(e.type==='steelpan'){const note=Math.max(60,Math.min(83,Math.round(e.midi))),buffer=liveAudio.steelpan?.buffers.get(note+'-soft')?.buffer;tail=(buffer?.duration||4)/2**((e.midi-note)/12)+1.8;}
+  else if(e.type==='handpan')tail=3.4;else if(e.type==='kalimba')tail=2.3;
   else if(e.type==='metallophone')tail=5.5;else if(e.type==='glockenspiel')tail=3.9;
   ending=Math.max(ending,at+tail);
  }
- const seconds=Math.min(120,ending+.15),ctx=new Offline(2,Math.ceil(seconds*44100),44100),audio=new MusicAudio();audio.offline=true;audio.init(ctx);
+ const seconds=Math.min(120,ending+.15),ctx=new Offline(2,Math.ceil(seconds*44100),44100),audio=new MusicAudio();audio.offline=true;audio.fxMode=liveAudio.fxMode||'clean';audio.init(ctx);
  audio.steelpan=new SteelpanVoice(ctx,audio.master,audio.reverb);audio.steelpan.buffers=liveAudio.steelpan?.buffers||new Map();audio.resonant=new ResonantVoice(ctx,audio.master,audio.reverb);audio.resonant.buffers=liveAudio.resonant?.buffers||new Map();
  if(events.some(x=>x.event.type==='steelpan')&&audio.steelpan.buffers.size!==48)throw Error('Steelpan samples are not ready. Enable sound and try again.');
  if(events.some(x=>['gong','windchimes'].includes(x.event.type))&&audio.resonant.buffers.size!==2)throw Error('Gong and chime samples are not ready. Enable sound and try again.');

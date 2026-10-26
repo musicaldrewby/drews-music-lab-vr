@@ -1,9 +1,10 @@
-import {INSTRUMENTS,instrument} from './piano-roll.js?v=30';
+import {INSTRUMENTS,instrument} from './piano-roll.js?v=38';
 export const CHALLENGES=[
  {id:'four',title:'Four-note melody',text:'Choose four notes. Give them a rhythm, then add a second instrument with Overdub.',stations:['steelpan','ax'],rhythm:'First beat'},
  {id:'answer',title:'Musical conversation',text:'Play a short question in measures 1–2. Overdub an answer on another instrument in measures 3–4.',stations:['ax','am']},
  {id:'three',title:'Three-instrument band',text:'Build a beat, add a bass line, then record a melody. Use the mixer to help each part be heard.',stations:['drums','bass','bw'],rhythm:'First beat'},
- {id:'rain',title:'A gentle rainstorm',text:'Start with light maraca taps. Overdub wind chimes, then a soft gong. Leave space between sounds.',stations:['maracas','windchimes','gong']}
+ {id:'rain',title:'A gentle rainstorm',text:'Start with light maraca taps. Overdub wind chimes, then a soft gong. Leave space between sounds.',stations:['maracas','windchimes','gong']},
+ {id:'groove',title:'Handpan & Kalimba groove',text:'Play a warm Handpan melody, then overdub sparkling Kalimba thumb-piano notes and Bongos.',stations:['handpan','kalimba','bongos'],rhythm:'Sunny walk'}
 ];
 export const GUIDE_STEPS={pick:['1 / 3 · Choose an instrument','Choose a sound you like. Try a few notes first.','choose-instrument'],record:['2 / 3 · Record your first part','Press Record, wait for four clicks, then play. The four-measure take ends automatically.','quick-record'],layer:['3 / 3 · Add another part','Choose another instrument, then Overdub. Press Stop when you finish adding notes.','quick-overdub'],done:['You made a song!','Listen, adjust the mixer, then Save Song to keep or share it.','quick-save']};
 export class FirstSongGuide{
@@ -35,7 +36,9 @@ export class Constellation{
 }
 export function drawInstrumentIcon(canvas,id){canvas.width=144;canvas.height=88;const c=canvas.getContext('2d'),color=INSTRUMENTS[id]?.[1]||'#bca0ff';c.fillStyle='#193e43';c.fillRect(0,0,144,88);c.strokeStyle=color;c.lineWidth=3;c.fillStyle=color;
  if(['sx','ax','bx','sm','am','bm','glock','xylophone','metallophone'].includes(id)){for(let i=0;i<13;i++)c.fillRect(8+i*10,13+i*.7,7,62-i*2.4);}
- else if(id==='steelpan'||id==='gong'){c.beginPath();c.ellipse(72,44,54,32,0,0,Math.PI*2);c.stroke();for(let i=0;i<(id==='gong'?1:13);i++){const a=i/8*Math.PI*2,r=i<8?30:13;c.beginPath();c.ellipse(id==='gong'?72:72+Math.sin(a)*r,id==='gong'?44:44+Math.cos(a)*r*.65,id==='gong'?10:5,4,0,0,Math.PI*2);c.fill();}}
+ else if(id==='steelpan'||id==='gong'||id==='handpan'){c.beginPath();c.ellipse(72,44,54,32,0,0,Math.PI*2);c.stroke();for(let i=0;i<(id==='gong'?1:id==='handpan'?9:13);i++){const a=i/8*Math.PI*2,r=id==='handpan'?(i===0?0:28):(i<8?30:13);c.beginPath();c.ellipse(id==='gong'?72:72+Math.sin(a)*r,id==='gong'?44:44+Math.cos(a)*r*.65,id==='gong'||(id==='handpan'&&i===0)?10:6,id==='handpan'&&i===0?7:4,0,0,Math.PI*2);c.fill();}}
+ else if(id==='kalimba'){c.strokeRect(28,14,88,62);c.beginPath();c.arc(72,56,12,0,Math.PI*2);c.stroke();for(let i=0;i<9;i++){const d=Math.abs(i-4);c.fillRect(36+i*8.5,14,5,36-d*4.5);}}
+ else if(id==='bongos'){for(const [x,rx]of [[48,22],[98,27]]){c.beginPath();c.ellipse(x,34,rx,14,0,0,Math.PI*2);c.stroke();c.fillRect(x-rx+4,34,rx*2-8,32);}}
  else if(id==='synth'||id==='piano'){for(let i=0;i<10;i++){c.fillStyle='#f4eddb';c.fillRect(11+i*12,30,10,45);if(i%7!==2&&i%7!==6){c.fillStyle='#193e43';c.fillRect(18+i*12,30,6,25);}}c.fillStyle=color;c.fillRect(11,12,120,10);}
  else if(id==='bw'||id==='windchimes'){for(let i=0;i<(id==='bw'?8:6);i++){c.fillStyle=id==='bw'?['#e35c55','#ee9453','#e4cc62','#93bb5a','#4a9e89','#6c9db6','#a781bc','#e35c55'][i]:color;c.fillRect(15+i*15,12,10,64-i*6);}}
  else if(id==='drums'||id==='bass'){for(let row=0;row<3;row++)for(let col=0;col<8;col++){c.globalAlpha=(row+col)%3===0?1:.35;c.fillRect(10+col*16,17+row*21,12,13);}c.globalAlpha=1;}

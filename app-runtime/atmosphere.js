@@ -1,5 +1,5 @@
 import * as THREE from './vendor/three.module.js';
-import {OutdoorWeather} from './weather.js?v=34';
+import {OutdoorWeather} from './weather.js?v=39';
 
 // Static geometry and three shadow-free fill lights keep the room XR-friendly.
 export function addAtmosphere(scene){

@@ -51,7 +51,7 @@ export function findMalletStrike(meshes,from,to,previousContacts,now){
 // Horizontal bars and steelpan notes should sound from an intentional
 // downward stroke. Wall instruments keep their natural forward interaction.
 export function deliberateMalletStrike(type,from,to,dt,sensitivity='normal'){
-  if(!['xylophone','metallophone','glockenspiel','steelpan'].includes(type))return true;
+  if(!['xylophone','metallophone','glockenspiel','steelpan','handpan','kalimba','bongos'].includes(type))return true;
   const profile=MALLET_SENSITIVITY[sensitivity]||MALLET_SENSITIVITY.normal;
   const seconds=Math.max(.001,dt),distance=from.distanceTo(to),speed=distance/seconds,down=(from.y-to.y)/seconds;
   return speed>=profile.speed&&down>=profile.down&&down/Math.max(speed,.001)>=profile.ratio;
@@ -74,7 +74,7 @@ export function malletVelocity(speed){
 }
 export function malletImpactVelocity(type,from,to,dt){
  const seconds=Math.max(.001,dt);
- const speed=['xylophone','metallophone','glockenspiel','steelpan'].includes(type)
+ const speed=['xylophone','metallophone','glockenspiel','steelpan','handpan','kalimba','bongos'].includes(type)
   ?Math.max(0,from.y-to.y)/seconds:from.distanceTo(to)/seconds;
  return malletVelocity(speed);
 }

@@ -1,8 +1,8 @@
 import {HARMONIES} from './music-presets.js?v=14';
 import {validateBass,bassEvent} from './bass.js?v=21';
 import {SYNTH_DEFAULT,SYNTH_PARAMS} from './synth.js';
-const TYPES=['gong','windchimes','steelpan','piano','xylophone','metallophone','glockenspiel','boomwhacker','maracas','tambourine','cowbell','kick','snare','hat','clap','synth'];
-const IDS=['gong','windchimes','steelpan','piano','sx','ax','bx','sm','am','bm','glock','bw','maracas','tambourine','cowbell','synth','drums'];
+const TYPES=['gong','windchimes','steelpan','handpan','kalimba','bongos','piano','xylophone','metallophone','glockenspiel','boomwhacker','maracas','tambourine','cowbell','kick','snare','hat','clap','synth'];
+const IDS=['gong','windchimes','steelpan','handpan','kalimba','bongos','piano','sx','ax','bx','sm','am','bm','glock','bw','maracas','tambourine','cowbell','synth','drums'];
 const copy=x=>JSON.parse(JSON.stringify(x));
 function validDrums(value){if(value==null)return null;if(!Array.isArray(value)||value.length!==4||value.some(row=>!Array.isArray(row)||row.length!==16||row.some(cell=>typeof cell!=='boolean')))throw Error('Invalid drum pattern.');return copy(value);}
 
@@ -22,7 +22,7 @@ export class LoopRecorder{
  get hasContent(){return !!this.events.length||!!this.drumPattern?.some(row=>row.some(Boolean))||!!this.bassPattern?.steps.some(Boolean);}
  snapshot(title='My song'){return{format:'drews-loop-song',version:1,title,mix:validateMix(this.mix),harmony:this.harmony,bpm:this.bpm,bars:this.bars,events:copy(this.events),bassPattern:validateBass(this.bassPattern),drumPattern:validDrums(this.drumPattern)};}
  backup(){this.undoState=this.snapshot();}
- configure(bpm,bars){if(this.events.length||this.state!=='stopped')throw Error('Stop and clear the recorded notes before changing tempo.');if(!Number.isFinite(bpm)||bpm<40||bpm>200||![1,2,4,8].includes(bars))throw Error('Choose 40–200 BPM and 1, 2, 4 or 8 bars.');this.bpm=bpm;this.bars=bars;this.change();}
+ configure(bpm,bars){if(this.events.length||this.state!=='stopped')throw Error('Stop and clear the recorded notes before changing tempo or loop length.');if(!Number.isFinite(bpm)||bpm<40||bpm>200||![1,2,4,8].includes(bars))throw Error('Choose 40–200 BPM and 1, 2, 4 or 8 bars.');this.bpm=bpm;this.bars=bars;this.change();}
  setMode(mode){if(!['replace','overdub'].includes(mode))throw Error('Invalid recording mode.');if(this.taking)throw Error('Stop this take before starting another.');this.mode=mode;this.change();}
  startTake(now,options={}){
   if(this.taking){this.finish(now);return;}
@@ -49,6 +49,8 @@ export class LoopRecorder{
  restore(song){this.mix=validateMix(song?.mix);this.events=copy(song?.events||[]);this.drumPattern=validDrums(song?.drumPattern);this.bassPattern=validateBass(song?.bassPattern);this.lastLayerState=null;if(song){this.harmony=song.harmony||'c-ionian';this.bpm=song.bpm;this.bars=song.bars;}}
  finish(now){if(!this.taking)return;for(const [note,start]of this.activeCaptures)note.duration=Math.max(.01,Math.min(32,this.bars*4,(Math.min(now,this.recordEnd)-start)/this.beatSeconds));this.activeCaptures.clear();if(now<this.recordStart){const previousLayer=this.lastLayerState,wasPlaying=this.takeFromPlaying,origin=this.preTakeOrigin,cursor=this.preTakeCursor;this.restore(this.takeSnapshot);this.takeSnapshot=null;this.lastLayerState=previousLayer;this.take=[];this.state=wasPlaying?'playing':'stopped';this.origin=origin;this.cursor=Math.max(now,cursor);this.change();return;}if(this.mode==='overdub'&&this.take.length)this.lastLayerState=copy(this.takeSnapshot);if(this.mode==='replace'||this.take.length)this.lastTakeState=this.takeSnapshot;this.takeSnapshot=null;this.events=[...this.events,...this.take].sort((a,b)=>a.beat-b.beat);this.take=[];this.state='playing';if(!this.continuous&&now<this.recordEnd){this.origin=now+.04;this.cursor=now;}this.onFinish();this.change();}
  removeLastNote(){const list=this.take.length?this.take:this.events;if(!list.length)return false;let index=list.length-1,best=-Infinity;for(let i=0;i<list.length;i++){const order=this.captureOrder.get(list[i]);if(order!==undefined&&order>best){best=order;index=i;}}const [note]=list.splice(index,1);this.activeCaptures.delete(note);this.captureCycles.delete(note);this.captureOrder.delete(note);this.change();return true;}
+ removeNoteByIndex(index){if(this.taking||index<0||index>=this.events.length)return null;this.backup();const [removed]=this.events.splice(index,1);this.change();return removed;}
+ quantizeRecordedNotes(){if(this.taking||!this.events.length)return false;this.backup();const total=this.bars*4;this.events=this.events.map(e=>({...e,beat:(Math.round(e.beat*4)/4)%total})).sort((a,b)=>a.beat-b.beat);this.change();return true;}
  undoLastLayer(now){if(this.taking||!this.lastLayerState)return false;const state=this.state,origin=this.origin,cursor=this.cursor,saved=this.lastLayerState;this.restore(saved);this.lastTakeState=null;this.lastLayerState=null;this.state=state;this.origin=origin;this.cursor=Math.max(now,cursor);this.change();return true;}
  undoLastTake(now){const saved=this.taking?this.takeSnapshot:this.lastTakeState;if(!saved)return false;this.activeCaptures.clear();this.take=[];this.restore(saved);this.takeSnapshot=null;this.lastTakeState=null;this.undoState=null;this.state='stopped';this.machineStarts={drums:0,bass:0};this.origin=now;this.cursor=now;this.finishAt=Infinity;this.change();return true;}
  recoverySnapshot(title='Recovered loop'){const song=this.snapshot(title);song.events=[...this.events,...this.take].map(copy).sort((a,b)=>a.beat-b.beat);return song;}
@@ -92,7 +94,7 @@ export class LoopRecorder{
   if(this.bassPattern){const interval=this.beatSeconds/4;let index=Math.max(0,Math.ceil((begin-this.origin)/interval-1e-9));for(let at=this.origin+index*interval;at<end;at=this.origin+(++index)*interval){if(at<begin-1e-9||at<this.machineStarts.bass-1e-9)continue;const event=bassEvent(this.bassPattern,index%16);if(event)this.playEvent(event,Math.max(now,at),this.beatSeconds);}}
   this.cursor=end;
  }
- status(now){if(this.state==='stopped')return this.hasContent?'Stopped · '+this.bars+' measures':'Ready · 4 measures';if(this.state==='countin')return (this.mode==='overdub'?'Overdub':'Record')+' in '+Math.max(1,Math.ceil((this.recordStart-now)/this.beatSeconds))+' beats';const beat=Math.floor(Math.max(0,now-this.origin)/this.beatSeconds)%(this.bars*4);return (this.state==='recording'?(this.mode==='overdub'?'Overdubbing':'Recording'):'Playing')+' · measure '+(Math.floor(beat/4)+1)+'/'+this.bars+' · beat '+(beat%4+1);}
+ status(now){const label=this.bars+(this.bars===1?' measure':' measures');if(this.state==='stopped')return this.hasContent?'Stopped · '+label:'Ready · '+label;if(this.state==='countin')return (this.mode==='overdub'?'Overdub':'Record')+' in '+Math.max(1,Math.ceil((this.recordStart-now)/this.beatSeconds))+' beats';const beat=Math.floor(Math.max(0,now-this.origin)/this.beatSeconds)%(this.bars*4);return (this.state==='recording'?(this.mode==='overdub'?'Overdubbing':'Recording'):'Playing')+' · measure '+(Math.floor(beat/4)+1)+'/'+this.bars+' · beat '+(beat%4+1);}
 }
 export class SongStore{
  constructor(){this.db=null;this.opening=null;this.localKey='drews-music-lab-song-backup-v1';}
